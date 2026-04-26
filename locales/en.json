@@ -362,7 +362,85 @@
         "titleAccent": "ready to launch",
         "titlePost": "",
         "description": "Pick a professionally designed template and customize it to your brand. Every theme is mobile-first, RTL-ready, and blazing fast.",
-        "viewAll": "Browse all themes"
+        "viewAll": "Browse all themes",
+        "items": {
+          "minimal": { "name": "Minimal", "category": "Fashion", "tagline": "Quiet typography, generous whitespace. Lets the product speak." },
+          "modern": { "name": "Modern", "category": "Electronics", "tagline": "Bold contrast and confident geometry. Built for high-conversion catalogs." },
+          "cyber": { "name": "Cyber", "category": "Streetwear", "tagline": "Neon accents, mono UI. Made for Gen-Z drops and limited releases." },
+          "food": { "name": "Fresh Bite", "category": "Food & Grocery", "tagline": "Warm tones and appetizing layouts. Optimized for menu browsing." },
+          "classic": { "name": "Classic", "category": "Beauty", "tagline": "Editorial elegance with serif refinement. Premium feel out of the box." },
+          "cozy": { "name": "Cozy", "category": "Home & Decor", "tagline": "Soft palette, gentle motion. Welcoming for lifestyle brands." }
+        }
+      },
+      "merchants": {
+        "eyebrow": "Powering Algerian commerce",
+        "titlePre": "Brands already",
+        "titleAccent": "shipping",
+        "titlePost": "with Swekly.",
+        "description": "From dorm-room side hustles to multi-warehouse operations — merchants of every size run their stores on our platform.",
+        "metrics": {
+          "stores": "Active stores",
+          "orders": "Orders processed",
+          "wilayas": "Wilayas served"
+        },
+        "items": {
+          "atlas": { "name": "Atlas Apparel", "category": "Fashion" },
+          "djezzy": { "name": "Maison Djezzy", "category": "Home Goods" },
+          "kasbah": { "name": "Kasbah Coffee", "category": "Food & Drink" },
+          "souk": { "name": "Souk Digital", "category": "Electronics" },
+          "henna": { "name": "Henna & Co", "category": "Beauty" },
+          "argan": { "name": "Argan Pure", "category": "Cosmetics" },
+          "noor": { "name": "Noor Studio", "category": "Lifestyle" },
+          "tamanrasset": { "name": "Tamanrasset Crafts", "category": "Artisan" },
+          "berber": { "name": "Berber Threads", "category": "Apparel" },
+          "saharaTech": { "name": "Sahara Tech", "category": "Gadgets" },
+          "dattes": { "name": "Dattes Royales", "category": "Food" },
+          "rose": { "name": "Rose Algiers", "category": "Florist" }
+        }
+      },
+      "trial": {
+        "eyebrow": "Your free trial",
+        "titlePre": "Live in",
+        "titleAccent": "thirty days",
+        "titlePost": "or less.",
+        "description": "Fourteen days free, no credit card. Here's exactly what your first month looks like — milestones we hit alongside our most successful merchants.",
+        "finishLabel": "First payout",
+        "steps": {
+          "signup": {
+            "day": "Day 0",
+            "label": "Setup",
+            "title": "Sign up & connect",
+            "description": "Create your store, pick a theme, claim a free subdomain. No credit card required.",
+            "bullets": ["Free .swekly.com subdomain", "Pre-filled Algerian tax & shipping zones", "Import products from CSV or Shopify"]
+          },
+          "customize": {
+            "day": "Day 1–3",
+            "label": "Brand",
+            "title": "Customize your storefront",
+            "description": "Upload your logo, set your colors, add your first 10 products with AI-generated descriptions.",
+            "bullets": ["Drag-and-drop theme editor", "AI product copy in FR / AR", "Connect Maystro or Yalidine"]
+          },
+          "launch": {
+            "day": "Day 4–7",
+            "label": "Launch",
+            "title": "Open your doors",
+            "description": "Connect your custom domain, install your Meta Pixel, send your first WhatsApp campaign.",
+            "bullets": ["SSL & custom domain in one click", "Meta Pixel & Google Analytics wired", "WhatsApp catalog auto-sync"]
+          },
+          "scale": {
+            "day": "Day 8–30",
+            "label": "Grow",
+            "title": "Get to your first hundred orders",
+            "description": "Track every order live, automate confirmations, see exactly which ad campaigns are paying off.",
+            "bullets": ["Live order pipeline", "Per-channel revenue attribution", "Auto-restock alerts & reorder points"]
+          }
+        },
+        "assurances": {
+          "noCard": "No credit card",
+          "cancel": "Cancel anytime",
+          "support": "Free onboarding support",
+          "data": "Your data stays yours"
+        }
       },
       "integrations": {
         "eyebrow": "Built-in integrations",

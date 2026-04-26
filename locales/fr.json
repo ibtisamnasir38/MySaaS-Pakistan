@@ -362,7 +362,85 @@
         "titleAccent": "prêtes à lancer",
         "titlePost": "",
         "description": "Choisissez un modèle conçu par des professionnels et personnalisez-le à votre marque. Chaque thème est mobile-first, RTL et ultra-rapide.",
-        "viewAll": "Voir tous les thèmes"
+        "viewAll": "Voir tous les thèmes",
+        "items": {
+          "minimal": { "name": "Minimal", "category": "Mode", "tagline": "Typographie sobre, espaces généreux. Le produit parle de lui-même." },
+          "modern": { "name": "Modern", "category": "Électronique", "tagline": "Contraste audacieux, géométrie assumée. Pour les catalogues à fort taux de conversion." },
+          "cyber": { "name": "Cyber", "category": "Streetwear", "tagline": "Accents néon, UI mono. Pour les drops Gen-Z et les éditions limitées." },
+          "food": { "name": "Fresh Bite", "category": "Alimentation", "tagline": "Tons chaleureux, mises en page appétissantes. Optimisé pour parcourir un menu." },
+          "classic": { "name": "Classic", "category": "Beauté", "tagline": "Élégance éditoriale et raffinement serif. Premium dès la première seconde." },
+          "cozy": { "name": "Cozy", "category": "Maison & Déco", "tagline": "Palette douce, mouvements feutrés. Accueillant pour les marques lifestyle." }
+        }
+      },
+      "merchants": {
+        "eyebrow": "Le commerce algérien tourne ici",
+        "titlePre": "Des marques qui",
+        "titleAccent": "expédient déjà",
+        "titlePost": "avec Swekly.",
+        "description": "Du side-business étudiant aux opérations multi-entrepôts — toutes les tailles de marchands gèrent leur boutique sur notre plateforme.",
+        "metrics": {
+          "stores": "Boutiques actives",
+          "orders": "Commandes traitées",
+          "wilayas": "Wilayas couvertes"
+        },
+        "items": {
+          "atlas": { "name": "Atlas Apparel", "category": "Mode" },
+          "djezzy": { "name": "Maison Djezzy", "category": "Maison" },
+          "kasbah": { "name": "Kasbah Coffee", "category": "Alimentation" },
+          "souk": { "name": "Souk Digital", "category": "Électronique" },
+          "henna": { "name": "Henna & Co", "category": "Beauté" },
+          "argan": { "name": "Argan Pure", "category": "Cosmétiques" },
+          "noor": { "name": "Noor Studio", "category": "Lifestyle" },
+          "tamanrasset": { "name": "Tamanrasset Crafts", "category": "Artisanat" },
+          "berber": { "name": "Berber Threads", "category": "Vêtements" },
+          "saharaTech": { "name": "Sahara Tech", "category": "Gadgets" },
+          "dattes": { "name": "Dattes Royales", "category": "Alimentation" },
+          "rose": { "name": "Rose Algiers", "category": "Fleuriste" }
+        }
+      },
+      "trial": {
+        "eyebrow": "Votre essai gratuit",
+        "titlePre": "En ligne en",
+        "titleAccent": "trente jours",
+        "titlePost": "ou moins.",
+        "description": "Quatorze jours offerts, sans carte bancaire. Voici exactement à quoi ressemble votre premier mois — les étapes que franchissent nos marchands les plus performants.",
+        "finishLabel": "Premier versement",
+        "steps": {
+          "signup": {
+            "day": "Jour 0",
+            "label": "Démarrage",
+            "title": "Inscription & connexion",
+            "description": "Créez votre boutique, choisissez un thème, réservez votre sous-domaine gratuit. Aucune carte requise.",
+            "bullets": ["Sous-domaine .swekly.com offert", "Zones fiscales et de livraison algériennes pré-remplies", "Importez produits via CSV ou Shopify"]
+          },
+          "customize": {
+            "day": "Jour 1–3",
+            "label": "Marque",
+            "title": "Personnalisez votre boutique",
+            "description": "Téléversez votre logo, choisissez vos couleurs, ajoutez vos 10 premiers produits avec descriptions générées par IA.",
+            "bullets": ["Éditeur de thème glisser-déposer", "Texte produit IA en FR / AR", "Connectez Maystro ou Yalidine"]
+          },
+          "launch": {
+            "day": "Jour 4–7",
+            "label": "Lancement",
+            "title": "Ouvrez vos portes",
+            "description": "Connectez votre domaine, installez votre Pixel Meta, envoyez votre première campagne WhatsApp.",
+            "bullets": ["SSL & domaine personnalisé en un clic", "Meta Pixel & Google Analytics branchés", "Synchronisation auto du catalogue WhatsApp"]
+          },
+          "scale": {
+            "day": "Jour 8–30",
+            "label": "Croissance",
+            "title": "Atteignez vos cent premières commandes",
+            "description": "Suivez chaque commande en direct, automatisez les confirmations, voyez exactement quelles campagnes rapportent.",
+            "bullets": ["Pipeline commandes en temps réel", "Attribution du chiffre par canal", "Alertes de réapprovisionnement automatiques"]
+          }
+        },
+        "assurances": {
+          "noCard": "Sans carte bancaire",
+          "cancel": "Résiliable à tout moment",
+          "support": "Support d'accompagnement offert",
+          "data": "Vos données restent à vous"
+        }
       },
       "integrations": {
         "eyebrow": "Intégrations natives",

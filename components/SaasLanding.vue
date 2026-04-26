@@ -76,6 +76,88 @@ const metrics = computed(() => [
   { value: '99.9%', label: t('saasLanding.stats.uptime'), detail: t('saasLanding.trust.cloud') }
 ])
 
+const themeShowcase = computed(() => {
+  const ids = ['minimal', 'modern', 'cyber', 'food', 'classic', 'cozy'] as const
+  const fonts: Record<string, string> = {
+    minimal: 'ui-sans-serif, system-ui, sans-serif',
+    modern: 'ui-sans-serif, system-ui, sans-serif',
+    cyber: 'ui-monospace, SFMono-Regular, monospace',
+    food: '"Playfair Display", Georgia, serif',
+    classic: 'Georgia, "Times New Roman", serif',
+    cozy: '"Playfair Display", Georgia, serif'
+  }
+  const slugs: Record<string, string> = {
+    minimal: 'minimal',
+    modern: 'modern',
+    cyber: 'cyber',
+    food: 'fresh',
+    classic: 'classic',
+    cozy: 'cozy'
+  }
+  return ids.map(id => ({
+    id,
+    name: t(`saasLanding.cinematic.templates.items.${id}.name`),
+    category: t(`saasLanding.cinematic.templates.items.${id}.category`),
+    tagline: t(`saasLanding.cinematic.templates.items.${id}.tagline`),
+    brand: t(`saasLanding.cinematic.templates.items.${id}.name`).toUpperCase(),
+    brandFont: fonts[id],
+    urlSlug: slugs[id],
+    to: `/themes#${id}`
+  }))
+})
+
+const merchantWall = computed(() => {
+  const ids = ['atlas', 'djezzy', 'kasbah', 'souk', 'henna', 'argan', 'noor', 'tamanrasset', 'berber', 'saharaTech', 'dattes', 'rose']
+  const palettes: Record<string, { gradient: string; font: string }> = {
+    atlas: { gradient: 'linear-gradient(135deg, #1e3a8a, #3b82f6)', font: 'Georgia, serif' },
+    djezzy: { gradient: 'linear-gradient(135deg, #831843, #be185d)', font: '"Playfair Display", serif' },
+    kasbah: { gradient: 'linear-gradient(135deg, #78350f, #d97706)', font: 'ui-serif, Georgia, serif' },
+    souk: { gradient: 'linear-gradient(135deg, #064e3b, #10b981)', font: 'ui-monospace, monospace' },
+    henna: { gradient: 'linear-gradient(135deg, #581c87, #c084fc)', font: 'Georgia, serif' },
+    argan: { gradient: 'linear-gradient(135deg, #422006, #ca8a04)', font: 'ui-serif, Georgia, serif' },
+    noor: { gradient: 'linear-gradient(135deg, #0c0a09, #44403c)', font: 'ui-sans-serif, system-ui' },
+    tamanrasset: { gradient: 'linear-gradient(135deg, #7c2d12, #ea580c)', font: 'Georgia, serif' },
+    berber: { gradient: 'linear-gradient(135deg, #14532d, #65a30d)', font: 'ui-sans-serif, system-ui' },
+    saharaTech: { gradient: 'linear-gradient(135deg, #0f172a, #6366f1)', font: 'ui-monospace, monospace' },
+    dattes: { gradient: 'linear-gradient(135deg, #713f12, #fbbf24)', font: '"Playfair Display", serif' },
+    rose: { gradient: 'linear-gradient(135deg, #9d174d, #f9a8d4)', font: 'Georgia, serif' }
+  }
+  return ids.map(id => {
+    const name = t(`saasLanding.cinematic.merchants.items.${id}.name`)
+    return {
+      name,
+      category: t(`saasLanding.cinematic.merchants.items.${id}.category`),
+      mark: name.split(' ').map(w => w[0]).slice(0, 2).join(''),
+      gradient: palettes[id].gradient,
+      font: palettes[id].font
+    }
+  })
+})
+
+const merchantMetrics = computed(() => [
+  { value: '1,200+', label: t('saasLanding.cinematic.merchants.metrics.stores') },
+  { value: '480K+', label: t('saasLanding.cinematic.merchants.metrics.orders') },
+  { value: '48 / 58', label: t('saasLanding.cinematic.merchants.metrics.wilayas') }
+])
+
+const trialSteps = computed(() => {
+  const ids = ['signup', 'customize', 'launch', 'scale'] as const
+  return ids.map(id => ({
+    day: t(`saasLanding.cinematic.trial.steps.${id}.day`),
+    label: t(`saasLanding.cinematic.trial.steps.${id}.label`),
+    title: t(`saasLanding.cinematic.trial.steps.${id}.title`),
+    description: t(`saasLanding.cinematic.trial.steps.${id}.description`),
+    bullets: (tm(`saasLanding.cinematic.trial.steps.${id}.bullets`) as any[]).map((b: any) => rt(b))
+  }))
+})
+
+const trialAssurances = computed(() => [
+  { icon: 'lucide:credit-card', label: t('saasLanding.cinematic.trial.assurances.noCard') },
+  { icon: 'lucide:x-circle', label: t('saasLanding.cinematic.trial.assurances.cancel') },
+  { icon: 'lucide:life-buoy', label: t('saasLanding.cinematic.trial.assurances.support') },
+  { icon: 'lucide:shield', label: t('saasLanding.cinematic.trial.assurances.data') }
+])
+
 const featureGrid = computed(() => [
   {
     icon: 'lucide:layers',
@@ -262,6 +344,17 @@ const faqItems = computed<Array<{ q: string; a: string }>>(() => {
       </div>
     </section>
 
+    <!-- ─── Merchant wall ─── -->
+    <MarketingCinematicSectionShell
+      :eyebrow="t('saasLanding.cinematic.merchants.eyebrow')"
+      :title-pre="t('saasLanding.cinematic.merchants.titlePre')"
+      :title-accent="t('saasLanding.cinematic.merchants.titleAccent')"
+      :title-post="t('saasLanding.cinematic.merchants.titlePost')"
+      :description="t('saasLanding.cinematic.merchants.description')"
+    >
+      <MarketingCinematicMerchantWall :merchants="merchantWall" :metrics="merchantMetrics" />
+    </MarketingCinematicSectionShell>
+
     <!-- ─── Features grid ─── -->
     <MarketingCinematicSectionShell
       :eyebrow="t('saasLanding.cinematic.features.eyebrow')"
@@ -279,6 +372,23 @@ const faqItems = computed<Array<{ q: string; a: string }>>(() => {
           :title="f.title"
           :description="f.description"
         />
+      </div>
+    </MarketingCinematicSectionShell>
+
+    <!-- ─── Theme showcase ─── -->
+    <MarketingCinematicSectionShell
+      :eyebrow="t('saasLanding.cinematic.templates.eyebrow')"
+      :title-pre="t('saasLanding.cinematic.templates.titlePre')"
+      :title-accent="t('saasLanding.cinematic.templates.titleAccent')"
+      :title-post="t('saasLanding.cinematic.templates.titlePost')"
+      :description="t('saasLanding.cinematic.templates.description')"
+    >
+      <MarketingCinematicThemeShowcase :themes="themeShowcase" />
+      <div class="mt-10 text-center">
+        <NuxtLink to="/themes" class="cinematic-link inline-flex items-center gap-2 text-sm">
+          {{ t('saasLanding.cinematic.templates.viewAll') }}
+          <Icon name="lucide:arrow-right" class="h-4 w-4" />
+        </NuxtLink>
       </div>
     </MarketingCinematicSectionShell>
 
@@ -367,6 +477,22 @@ const faqItems = computed<Array<{ q: string; a: string }>>(() => {
       <div class="mx-auto max-w-3xl">
         <MarketingCinematicFAQAccordion :items="faqItems" />
       </div>
+    </MarketingCinematicSectionShell>
+
+    <!-- ─── Trial timeline ─── -->
+    <MarketingCinematicSectionShell
+      :eyebrow="t('saasLanding.cinematic.trial.eyebrow')"
+      :title-pre="t('saasLanding.cinematic.trial.titlePre')"
+      :title-accent="t('saasLanding.cinematic.trial.titleAccent')"
+      :title-post="t('saasLanding.cinematic.trial.titlePost')"
+      :description="t('saasLanding.cinematic.trial.description')"
+      centered
+    >
+      <MarketingCinematicTrialTimeline
+        :steps="trialSteps"
+        :finish-label="t('saasLanding.cinematic.trial.finishLabel')"
+        :assurances="trialAssurances"
+      />
     </MarketingCinematicSectionShell>
 
     <!-- ─── Final CTA ─── -->
