@@ -12,6 +12,32 @@ void main() {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
     DatabaseService.databasesPathProvider = () async => inMemoryDatabasePath;
+    // The real sqlcipher plugin is not available under `flutter test`, so
+    // every open has to go through the ffi factory.
+    DatabaseService.databaseOpener =
+        (
+          path, {
+          version,
+          onConfigure,
+          onCreate,
+          onDowngrade,
+          onOpen,
+          onUpgrade,
+          password,
+          readOnly = false,
+          singleInstance = true,
+        }) => databaseFactory.openDatabase(
+          inMemoryDatabasePath,
+          options: OpenDatabaseOptions(
+            version: version,
+            onConfigure: onConfigure,
+            onCreate: onCreate,
+            onDowngrade: onDowngrade,
+            onOpen: onOpen,
+            onUpgrade: onUpgrade,
+            singleInstance: false,
+          ),
+        );
   });
 
   test('Database service saves and loads profile correctly with tenantId', () async {
@@ -36,7 +62,6 @@ void main() {
 
     // 5. Get profiles
     final profiles = await repo.getProfiles();
-    print('Fetched profiles: \${profiles.length}');
     expect(profiles.length, 1);
 
     // 6. Reset TenantMode to simulate restart but SAME tenant
@@ -44,7 +69,6 @@ void main() {
 
     // 7. Get profiles again
     final profiles2 = await repo.getProfiles();
-    print('Fetched profiles after re-init: \${profiles2.length}');
     expect(profiles2.length, 1);
   });
 }

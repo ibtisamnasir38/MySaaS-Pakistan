@@ -12,24 +12,55 @@ import 'package:admin_app/bootstrap.dart';
 import 'package:flutter/services.dart';
 
 void main() {
+  // Plain `test`, not `testWidgets`: the sqflite ffi database does real
+  // asynchronous I/O, which never completes under the widget tester's fake
+  // clock.
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   setUpAll(() async {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
     DatabaseService.databasesPathProvider = () async => inMemoryDatabasePath;
+    // The real sqlcipher plugin is not available under `flutter test`, so
+    // every open has to go through the ffi factory.
+    DatabaseService.databaseOpener =
+        (
+          path, {
+          version,
+          onConfigure,
+          onCreate,
+          onDowngrade,
+          onOpen,
+          onUpgrade,
+          password,
+          readOnly = false,
+          singleInstance = true,
+        }) => databaseFactory.openDatabase(
+          inMemoryDatabasePath,
+          options: OpenDatabaseOptions(
+            version: version,
+            onConfigure: onConfigure,
+            onCreate: onCreate,
+            onDowngrade: onDowngrade,
+            onOpen: onOpen,
+            onUpgrade: onUpgrade,
+            singleInstance: false,
+          ),
+        );
 
     const channel = MethodChannel('dev.fluttercommunity.plus/connectivity');
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
-      if (methodCall.method == 'check') {
-        return ['wifi'];
-      }
-      return null;
-    });
+          if (methodCall.method == 'check') {
+            return ['wifi'];
+          }
+          return null;
+        });
 
     SharedPreferences.setMockInitialValues({});
   });
 
-  testWidgets('printer profile persists across provider container restarts', (tester) async {
+  test('printer profile persists across provider container restarts', () async {
     await DatabaseService().resetForTest();
 
     final bootstrap = BootstrapConfig(
@@ -37,17 +68,17 @@ void main() {
       mode: AppMode.online,
       tenantId: 'test-tenant',
     );
-    
+
     // First container
     ProviderContainer container = ProviderContainer(
       overrides: [
         bootstrapProvider.overrideWith(() => BootstrapNotifier(bootstrap)),
       ],
     );
-    
+
     // AuthProvider initializes TenantModeService internally
     container.read(authProvider);
-    
+
     // Add profile
     final profile = PrinterProfile(
       id: 'test-printer-1',
@@ -56,34 +87,31 @@ void main() {
       connectionParams: {'ip': '192.168.1.100', 'port': 9100},
       capabilityParams: {'paperWidth': 80},
     );
-    
+
     await container.read(printerProfilesProvider.notifier).addProfile(profile);
-    
-    // Wait for the state to update
-    await tester.pump();
-    
+
     final state1 = container.read(printerProfilesProvider);
     expect(state1.profiles.length, 1);
-    
+
     // Dispose container (simulating app restart)
     container.dispose();
-    
+
     // Second container
     final container2 = ProviderContainer(
       overrides: [
         bootstrapProvider.overrideWith(() => BootstrapNotifier(bootstrap)),
       ],
     );
-    
+
     // AuthProvider initializes TenantModeService
     container2.read(authProvider);
-    
+
     // Load profiles (simulating opening settings page)
     await container2.read(printerProfilesProvider.notifier).loadProfiles();
-    
+
     final state2 = container2.read(printerProfilesProvider);
     expect(state2.profiles.length, 1);
-    
+
     container2.dispose();
   });
 }

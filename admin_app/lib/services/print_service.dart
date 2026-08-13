@@ -43,11 +43,76 @@ class SenderFactory {
   }
 }
 
+enum PrinterTestOutcome { success, failure, unsupported }
+
+/// Result of probing a printer connection without printing anything.
+class PrinterTestResult {
+  final PrinterTestOutcome outcome;
+  final String? detail;
+
+  const PrinterTestResult(this.outcome, {this.detail});
+
+  bool get isSuccess => outcome == PrinterTestOutcome.success;
+}
+
 class PrintService {
   final Ref ref;
   final ReceiptBuilder _receiptBuilder = ReceiptBuilder();
 
   PrintService(this.ref);
+
+  /// Opens (and immediately closes) a connection to [profile] so the user can
+  /// verify the configuration without wasting paper.
+  ///
+  /// Transports that cannot be probed without sending a job report
+  /// [PrinterTestOutcome.unsupported] rather than a misleading success.
+  Future<PrinterTestResult> testConnection(PrinterProfile profile) async {
+    if (profile.transport == PrinterTransport.pdf) {
+      return const PrinterTestResult(PrinterTestOutcome.unsupported);
+    }
+
+    final PrinterSender sender;
+    try {
+      sender = SenderFactory.getSender(profile.transport);
+    } catch (e) {
+      return PrinterTestResult(
+        PrinterTestOutcome.unsupported,
+        detail: e.toString(),
+      );
+    }
+
+    if (!sender.supportsConnectionProbe) {
+      return const PrinterTestResult(PrinterTestOutcome.unsupported);
+    }
+
+    try {
+      final connected = await sender.connect(profile);
+      return connected
+          ? const PrinterTestResult(PrinterTestOutcome.success)
+          : const PrinterTestResult(PrinterTestOutcome.failure);
+    } catch (e) {
+      return PrinterTestResult(
+        PrinterTestOutcome.failure,
+        detail: e.toString(),
+      );
+    } finally {
+      try {
+        await sender.disconnect();
+      } catch (_) {
+        // Best effort: a failed teardown must not mask the probe result.
+      }
+    }
+  }
+
+  Future<void> _sendCopies(
+    PrinterSender sender,
+    List<int> bytes,
+    PrinterProfile profile,
+  ) async {
+    for (var copy = 0; copy < profile.copies; copy++) {
+      await sender.send(bytes, profile);
+    }
+  }
 
   String? _resolveLogoUrl(String? url) {
     if (url == null || url.isEmpty) return null;
@@ -99,7 +164,7 @@ class PrintService {
       // We'll use receiptBuilder to wrap the images in ESC/POS commands
       final escPosBytes = await _receiptBuilder.buildImageReceipt(profile: profile, images: images);
       final sender = SenderFactory.getSender(profile.transport);
-      await sender.send(escPosBytes, profile);
+      await _sendCopies(sender, escPosBytes, profile);
       return;
     }
 
@@ -121,8 +186,8 @@ class PrintService {
     // 2. Get Sender
     final sender = SenderFactory.getSender(profile.transport);
 
-    // 3. Send
-    await sender.send(bytes, profile);
+    // 3. Send (once per configured copy)
+    await _sendCopies(sender, bytes, profile);
   }
 
   Future<pw.Document> buildPdfDocument(

@@ -31,8 +31,8 @@ class ReceiptBuilder {
         : NumberFormat.simpleCurrency(name: currencyCode);
     final effectiveLayout = layout ?? ReceiptLayout.standard();
 
-    final CapabilityProfile capabilityProfile = await CapabilityProfile.load(
-      name: _getProfileName(profile.profileId),
+    final CapabilityProfile capabilityProfile = await _loadCapabilityProfile(
+      profile,
     );
     final generator = Generator(
       profile.paperWidth == 58 ? PaperSize.mm58 : PaperSize.mm80,
@@ -256,7 +256,9 @@ class ReceiptBuilder {
       }
     }
     
-    bytes += generator.feed(3);
+    if (profile.feedLines > 0) {
+      bytes += generator.feed(profile.feedLines);
+    }
 
     // 4. Cut & Drawer
     if (profile.cut) {
@@ -273,8 +275,8 @@ class ReceiptBuilder {
     required PrinterProfile profile,
     required List<List<int>> images,
   }) async {
-    final CapabilityProfile capabilityProfile = await CapabilityProfile.load(
-      name: _getProfileName(profile.profileId),
+    final CapabilityProfile capabilityProfile = await _loadCapabilityProfile(
+      profile,
     );
     final generator = Generator(
       profile.paperWidth == 58 ? PaperSize.mm58 : PaperSize.mm80,
@@ -300,15 +302,18 @@ class ReceiptBuilder {
     return bytes;
   }
 
-  String _getProfileName(int profileId) {
-    // Basic mapping, can be expanded
-    switch (profileId) {
-      case 1:
-        return 'XP-N160I';
-      case 2:
-        return 'RP80USE';
-      default:
-        return 'default';
+  /// Loads the ESC/POS capability profile configured on [profile].
+  ///
+  /// An unknown profile name must not stop a sale from printing, so we fall
+  /// back to the generic profile instead of letting the load throw.
+  Future<CapabilityProfile> _loadCapabilityProfile(
+    PrinterProfile profile,
+  ) async {
+    final name = profile.capabilityProfileName;
+    try {
+      return await CapabilityProfile.load(name: name);
+    } catch (_) {
+      return CapabilityProfile.load(name: 'default');
     }
   }
 }

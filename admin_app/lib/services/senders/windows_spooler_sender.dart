@@ -7,6 +7,37 @@ import 'printer_sender.dart';
 
 class WindowsSpoolerSender extends PrinterSender {
   @override
+  bool get supportsConnectionProbe => true;
+
+  @override
+  Future<bool> connect(PrinterProfile profile) async {
+    if (!Platform.isWindows) {
+      throw Exception('Windows Spooler is only supported on Windows.');
+    }
+
+    final printerName = profile.printerName;
+    if (printerName == null || printerName.isEmpty) {
+      throw Exception('Printer Name is required for Windows Spooler');
+    }
+
+    final pPrinterName = printerName.toNativeUtf16();
+    final phPrinter = calloc<HANDLE>();
+
+    try {
+      if (OpenPrinter(pPrinterName, phPrinter, nullptr) == 0) {
+        throw Exception(
+          'Failed to open printer: $printerName (Error: ${GetLastError()})',
+        );
+      }
+      ClosePrinter(phPrinter.value);
+      return true;
+    } finally {
+      calloc.free(pPrinterName);
+      calloc.free(phPrinter);
+    }
+  }
+
+  @override
   Future<void> send(List<int> bytes, PrinterProfile profile) async {
     if (!Platform.isWindows) {
       throw Exception('Windows Spooler is only supported on Windows.');

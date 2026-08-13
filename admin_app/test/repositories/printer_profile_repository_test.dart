@@ -37,17 +37,24 @@ void main() {
     TenantModeService().initialize(mode: AppMode.online, tenantId: 'test-tenant');
   });
 
-  test('create and load printer profile', () async {
-    final repo = PrinterProfileRepository(ApiService());
-    final profile = PrinterProfile(
+  setUp(() async {
+    await DatabaseService().resetForTest();
+  });
+
+  PrinterProfile buildProfile({String name = 'Test Printer'}) {
+    return PrinterProfile(
       id: '',
-      name: 'Test Printer',
+      name: name,
       transport: PrinterTransport.network,
       connectionParams: {'ip': '192.168.1.100', 'port': 9100},
       capabilityParams: {'paperWidth': 80, 'cut': true},
     );
+  }
 
-    final created = await repo.createProfile(profile);
+  test('create and load printer profile', () async {
+    final repo = PrinterProfileRepository(ApiService());
+
+    final created = await repo.createProfile(buildProfile());
     expect(created.id, isNotEmpty);
     expect(created.name, 'Test Printer');
 
@@ -56,5 +63,38 @@ void main() {
     expect(profiles.first.id, created.id);
     expect(profiles.first.name, 'Test Printer');
     expect(profiles.first.connectionParams['ip'], '192.168.1.100');
+  });
+
+  test('deleted printer does not come back on the next load', () async {
+    final repo = PrinterProfileRepository(ApiService());
+
+    final created = await repo.createProfile(buildProfile(name: 'Kitchen'));
+    expect((await repo.getProfiles()).length, 1);
+
+    await repo.deleteProfile(created.id);
+
+    // The local row must be gone, not just flagged, otherwise reopening
+    // settings while offline resurrects the printer.
+    expect(await repo.getProfiles(), isEmpty);
+  });
+
+  test('capability settings survive an update', () async {
+    final repo = PrinterProfileRepository(ApiService());
+
+    final created = await repo.createProfile(buildProfile(name: 'Counter'));
+    await repo.updateProfile(
+      created.withCapabilities({
+        'paperWidth': 58,
+        'copies': 2,
+        'capabilityProfile': 'XP-N160I',
+      }),
+    );
+
+    final stored = (await repo.getProfiles()).single;
+    expect(stored.paperWidth, 58);
+    expect(stored.copies, 2);
+    expect(stored.capabilityProfileName, 'XP-N160I');
+    // Untouched keys are still there.
+    expect(stored.cut, isTrue);
   });
 }

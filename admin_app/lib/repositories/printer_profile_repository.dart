@@ -17,6 +17,20 @@ class PrinterProfileRepository {
 
   String get _tid => TenantModeService().activeTenantId;
 
+  PrinterProfile _fromRow(Map<String, Object?> row) {
+    return PrinterProfile.fromMap({
+      'id': row['id'],
+      'name': row['name'],
+      'transport': row['transport'],
+      'connectionParams': row['connectionParams'] != null
+          ? jsonDecode(row['connectionParams'].toString())
+          : {},
+      'capabilityParams': row['capabilityParams'] != null
+          ? jsonDecode(row['capabilityParams'].toString())
+          : {},
+    });
+  }
+
   Future<List<PrinterProfile>> getProfiles({bool forceRefresh = false}) async {
     final db = await _dbService.database;
     final localData = await db.query(
@@ -25,30 +39,26 @@ class PrinterProfileRepository {
       whereArgs: [_tid],
     );
 
-    final localProfiles = localData
-        .map(
-          (e) => PrinterProfile.fromMap({
-            'id': e['id'],
-            'name': e['name'],
-            'transport': e['transport'],
-            'connectionParams': e['connectionParams'] != null
-                ? jsonDecode(e['connectionParams'].toString())
-                : {},
-            'capabilityParams': e['capabilityParams'] != null
-                ? jsonDecode(e['capabilityParams'].toString())
-                : {},
-          }),
-        )
-        .toList();
+    final localProfiles = localData.map(_fromRow).toList();
 
-    if (forceRefresh || await _syncService.isOnline) {
+    var shouldFetchRemote = forceRefresh;
+    if (!shouldFetchRemote) {
+      try {
+        shouldFetchRemote = await _syncService.isOnline;
+      } catch (_) {
+        // A failing connectivity probe must not hide the local printers.
+        shouldFetchRemote = false;
+      }
+    }
+
+    if (shouldFetchRemote) {
       try {
         final response = await _apiService.client.get(
           '/admin/settings/printers',
         );
         final List<dynamic> remoteData = response.data;
         final remoteProfiles = remoteData
-            .map((e) => PrinterProfile.fromMap(e))
+            .map((e) => PrinterProfile.fromMap(Map<String, dynamic>.from(e)))
             .toList();
 
         await db.transaction((txn) async {
@@ -69,7 +79,20 @@ class PrinterProfileRepository {
             }, conflictAlgorithm: ConflictAlgorithm.replace);
           }
         });
-        return remoteProfiles;
+
+        // Locally created/edited profiles that have not reached the server yet
+        // must survive a refresh, otherwise they disappear from settings until
+        // the sync queue drains.
+        final remoteIds = remoteProfiles.map((p) => p.id).toSet();
+        final pendingOnly = localData
+            .where(
+              (row) =>
+                  row['syncStatus'] != SyncStatus.synced.name &&
+                  !remoteIds.contains(row['id']?.toString()),
+            )
+            .map(_fromRow);
+
+        return [...remoteProfiles, ...pendingOnly];
       } catch (_) {}
     }
     return localProfiles;
@@ -125,17 +148,21 @@ class PrinterProfileRepository {
 
   Future<void> deleteProfile(String id) async {
     final db = await _dbService.database;
-    await db.update(
-      'printer_profiles',
-      {'syncStatus': SyncStatus.pending.name},
-      where: 'id = ? AND tenantId = ?',
-      whereArgs: [id, _tid],
-    );
 
+    // Queue the remote delete first: the outbox row carries the id, so the
+    // server still gets the delete even though the local row is gone.
     await _syncService.enqueueOperation(
       entityType: 'printerProfile',
       action: 'delete',
       payload: {'id': id},
+    );
+
+    // Remove the local row so a deleted printer does not come back the next
+    // time settings are opened offline.
+    await db.delete(
+      'printer_profiles',
+      where: 'id = ? AND tenantId = ?',
+      whereArgs: [id, _tid],
     );
   }
 }
