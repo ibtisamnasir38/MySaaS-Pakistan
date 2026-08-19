@@ -210,38 +210,49 @@ const parseDelimitedValues = (raw: string): string[] => {
     )
 }
 
+type CategoryResolution = {
+    categoryIds: string[]
+    unmatchedIds: string[]
+    unmatchedSlugs: string[]
+}
+
+// Unmatched ids/slugs are dropped (not thrown) rather than failing the row: a category id from the
+// exporting tenant will never exist in a different tenant's category table, so importing a catalog
+// into a new store must still succeed — just without that category assignment.
 const resolveCategoryIdsForImport = async (
     tenantId: string,
     rawIds: string[],
     rawSlugs: string[]
-): Promise<string[]> => {
+): Promise<CategoryResolution> => {
     let resolvedByIds: string[] = []
+    let unmatchedIds: string[] = []
     if (rawIds.length > 0) {
         const found = await prisma.category.findMany({
             where: { tenantId, id: { in: rawIds } },
             select: { id: true }
         })
         const foundSet = new Set(found.map((item) => item.id))
-        if (rawIds.some((id) => !foundSet.has(id))) {
-            throw new Error('Invalid categoryIds')
-        }
-        resolvedByIds = rawIds
+        resolvedByIds = rawIds.filter((id) => foundSet.has(id))
+        unmatchedIds = rawIds.filter((id) => !foundSet.has(id))
     }
 
     let resolvedBySlugs: string[] = []
+    let unmatchedSlugs: string[] = []
     if (rawSlugs.length > 0) {
         const found = await prisma.category.findMany({
             where: { tenantId, slug: { in: rawSlugs } },
             select: { id: true, slug: true }
         })
         const bySlug = new Map(found.map((item) => [item.slug, item.id]))
-        if (rawSlugs.some((slug) => !bySlug.has(slug))) {
-            throw new Error('Invalid categorySlugs')
-        }
-        resolvedBySlugs = rawSlugs.map((slug) => bySlug.get(slug)!).filter(Boolean)
+        resolvedBySlugs = rawSlugs.filter((slug) => bySlug.has(slug)).map((slug) => bySlug.get(slug)!)
+        unmatchedSlugs = rawSlugs.filter((slug) => !bySlug.has(slug))
     }
 
-    return Array.from(new Set([...resolvedByIds, ...resolvedBySlugs]))
+    return {
+        categoryIds: Array.from(new Set([...resolvedByIds, ...resolvedBySlugs])),
+        unmatchedIds,
+        unmatchedSlugs
+    }
 }
 
 export class BulkProductsService {
@@ -585,14 +596,27 @@ export class BulkProductsService {
                     const hasMultiCategoryColumns = hasColumn('categoryIds') || hasColumn('categorySlugs')
                     const hasSingleCategoryColumns = hasColumn('categoryId') || hasColumn('categorySlug')
 
+                    const reportUnmatched = (resolution: CategoryResolution) => {
+                        const unmatched = [...resolution.unmatchedIds, ...resolution.unmatchedSlugs]
+                        if (unmatched.length > 0) {
+                            summary.warnings.push({
+                                row: rowNumber,
+                                message: `Category not found in this store, skipped: ${unmatched.join(', ')}`
+                            })
+                        }
+                        return resolution.categoryIds
+                    }
+
                     if (hasMultiCategoryColumns) {
                         const idsCell = (record.categoryIds ?? '').trim()
                         const slugsCell = (record.categorySlugs ?? '').trim()
                         if (!idsCell && !slugsCell) return []
-                        return resolveCategoryIdsForImport(
-                            tenantId,
-                            idsCell ? parseDelimitedValues(idsCell) : [],
-                            slugsCell ? parseDelimitedValues(slugsCell) : []
+                        return reportUnmatched(
+                            await resolveCategoryIdsForImport(
+                                tenantId,
+                                idsCell ? parseDelimitedValues(idsCell) : [],
+                                slugsCell ? parseDelimitedValues(slugsCell) : []
+                            )
                         )
                     }
 
@@ -600,10 +624,12 @@ export class BulkProductsService {
                         const categoryIdCell = (record.categoryId ?? '').trim()
                         const categorySlugCell = (record.categorySlug ?? '').trim()
                         if (!categoryIdCell && !categorySlugCell) return []
-                        return resolveCategoryIdsForImport(
-                            tenantId,
-                            categoryIdCell ? [categoryIdCell] : [],
-                            categorySlugCell ? [categorySlugCell] : []
+                        return reportUnmatched(
+                            await resolveCategoryIdsForImport(
+                                tenantId,
+                                categoryIdCell ? [categoryIdCell] : [],
+                                categorySlugCell ? [categorySlugCell] : []
+                            )
                         )
                     }
 

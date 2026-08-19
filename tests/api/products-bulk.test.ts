@@ -234,6 +234,41 @@ describe('Admin products bulk ops', () => {
         expect(links.map((row) => row.categoryId)).toEqual(expect.arrayContaining([categoryAId, categoryBId]))
     })
 
+    it('imports a categorized product into a different tenant instead of erroring on the source tenant category id', async () => {
+        // Simulates migrating a catalog: export from tenant A (product has a category), then
+        // import that same archive into tenant B, which has no category matching tenant A's id/slug.
+        const exportRes = await request(app)
+            .get(`/api/admin/products/export.zip?ids=${productAId}`)
+            .set('X-Forwarded-Host', hostA)
+            .set('Authorization', `Bearer ${adminAToken}`)
+            .buffer(true)
+            .parse((response, callback) => {
+                const chunks: Buffer[] = []
+                response.on('data', (chunk: Buffer) => chunks.push(chunk))
+                response.on('end', () => callback(null, Buffer.concat(chunks)))
+            })
+        expect(exportRes.status).toBe(200)
+
+        const sourceProduct = await prisma.product.findFirst({ where: { tenantId: tenantAId, id: productAId } })
+
+        const importRes = await request(app)
+            .post('/api/admin/products/import.zip')
+            .set('X-Forwarded-Host', hostB)
+            .set('Authorization', `Bearer ${adminBToken}`)
+            .attach('file', exportRes.body as Buffer, { filename: 'archive.zip', contentType: 'application/zip' })
+
+        expect(importRes.status).toBe(200)
+        expect(importRes.body.errors?.length || 0).toBe(0)
+        expect(importRes.body.created).toBe(1)
+        expect(
+            (importRes.body.warnings ?? []).some((w: any) => /Category not found in this store/i.test(w.message))
+        ).toBe(true)
+
+        const created = await prisma.product.findFirst({ where: { tenantId: tenantBId, slug: sourceProduct!.slug } })
+        expect(created).toBeTruthy()
+        expect(created?.categoryId).toBeNull()
+    })
+
     it('imports images and normalizes tenant-scoped upload links', async () => {
         const prevPublicUrl = process.env.S3_PUBLIC_URL
         const prevPublicBucket = process.env.S3_PUBLIC_BUCKET_NAME
