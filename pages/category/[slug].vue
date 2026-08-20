@@ -27,47 +27,37 @@ type Product = {
   categories?: Array<{ id: string; title: string; slug: string }>
 }
 
-const categoriesUrl = useTenantApiUrl('/api/categories')
-const productsUrl = useTenantApiUrl('/api/products')
+const categoryUrl = useTenantApiUrl(`/api/categories/${encodeURIComponent(slug)}`)
 
-const categories = ref<Category[]>([])
+let fetchedCategory: Category | null = null
 try {
-  categories.value = await $fetch(categoriesUrl, { headers: useTenantApiHeaders() }) as Category[]
+  fetchedCategory = await $fetch(categoryUrl, { headers: useTenantApiHeaders() }) as Category
 } catch {
-  throw createError({ statusCode: 500, statusMessage: 'Failed to load categories' })
+  throw createError({ statusCode: 404, statusMessage: 'Category not found' })
 }
-
-const activeCategory = computed(() => (categories.value ?? []).find((c) => c.slug === slug))
-if (!activeCategory.value) {
+if (!fetchedCategory) {
   throw createError({ statusCode: 404, statusMessage: 'Category not found' })
 }
 const category = {
-  ...activeCategory.value,
-  title: activeCategory.value.title
+  ...fetchedCategory,
+  title: fetchedCategory.title
 } as Category
+
+const productsUrl = useTenantApiUrl('/api/products')
 
 const products = ref<Product[]>([])
 try {
-  products.value = await $fetch(productsUrl, { headers: useTenantApiHeaders() }) as Product[]
+  products.value = await $fetch(productsUrl, { headers: useTenantApiHeaders(), query: { category: category.id } }) as Product[]
 } catch {
   throw createError({ statusCode: 500, statusMessage: 'Failed to load products' })
 }
 
-const productMatchesCategory = (product: Product, categoryId: string): boolean => {
-  const ids = Array.from(
-    new Set([...(product.categoryIds || []), product.categoryId].filter((id): id is string => typeof id === 'string' && id.length > 0))
-  )
-  return ids.includes(categoryId)
-}
-
 const categoryProducts = computed(() =>
-  (products.value || [])
-    .filter((product) => productMatchesCategory(product, category.id))
-    .map((product) => ({
-      ...product,
-      // Keep legacy template filters working (`p.categoryId === activeCategory.id`).
-      categoryId: category.id
-    }))
+  (products.value || []).map((product) => ({
+    ...product,
+    // Keep legacy template filters working (`p.categoryId === activeCategory.id`).
+    categoryId: category.id
+  }))
 )
 
 useTenantSeo({

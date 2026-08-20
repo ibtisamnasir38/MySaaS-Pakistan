@@ -188,6 +188,13 @@
               </div>
 
               <div class="flex items-center gap-2 shrink-0">
+                <span
+                  v-if="category.isHidden"
+                  class="ui-badge ui-badge--amber"
+                  :title="t('admin.forms.category.isHidden.hint')"
+                >
+                  {{ t('admin.pages.categories.index.table.hidden') }}
+                </span>
                 <span class="ui-badge ui-badge--slate">
                   {{ t('admin.pages.categories.index.table.productsCount', { count: category._count?.products || 0 }) }}
                 </span>
@@ -332,10 +339,17 @@
               <div class="flex items-center justify-between gap-3">
                 <div class="min-w-0">
                   <p
-                    class="truncate text-sm font-medium"
+                    class="truncate text-sm font-medium flex items-center gap-2"
                     style="color: var(--text-primary)"
                   >
                     {{ categoryDisplayTitle(subcategory) }}
+                    <span
+                      v-if="subcategory.isHidden"
+                      class="ui-badge ui-badge--amber"
+                      :title="t('admin.forms.category.isHidden.hint')"
+                    >
+                      {{ t('admin.pages.categories.index.table.hidden') }}
+                    </span>
                   </p>
                   <p
                     class="truncate text-xs"
@@ -465,6 +479,7 @@ interface Category {
   parentId?: string | null
   parent?: { id: string; title: string; slug: string } | null
   createdAt?: string
+  isHidden?: boolean
   _count?: { products: number; subcategories?: number }
 }
 

@@ -164,7 +164,7 @@ export class CategoriesService {
 
     async listPublic(tenantId: string) {
         const categories = await prisma.category.findMany({
-            where: { tenantId },
+            where: { tenantId, isHidden: false },
             include: {
                 parent: { select: { id: true, title: true, slug: true } },
                 _count: { select: { products: true, productLinks: true, children: true } }
@@ -174,6 +174,20 @@ export class CategoriesService {
 
         const mapped = categories.map((category) => this.mapCategory(category))
         return this.orderCategoriesByHierarchy(mapped)
+    }
+
+    async getPublicCategoryBySlug(tenantId: string, slug: string) {
+        // Deliberately ignores isHidden so a hidden category is still reachable
+        // by visiting its direct URL, even though it's excluded from listPublic().
+        const category = await prisma.category.findFirst({
+            where: { tenantId, slug },
+            include: {
+                parent: { select: { id: true, title: true, slug: true } },
+                _count: { select: { products: true, productLinks: true, children: true } }
+            }
+        })
+
+        return category ? this.mapCategory(category) : null
     }
 
     async isSlugAvailable(tenantId: string, slug: string, excludeCategoryId?: string) {
@@ -191,7 +205,7 @@ export class CategoriesService {
 
     async createCategory(
         tenantId: string,
-        data: { id?: unknown; title?: string; slug?: string; imageUrl?: unknown; parentId?: unknown }
+        data: { id?: unknown; title?: string; slug?: string; imageUrl?: unknown; parentId?: unknown; isHidden?: unknown }
     ) {
         if (!data.title || !data.slug) {
             throw new Error('Title and Slug are required')
@@ -227,7 +241,8 @@ export class CategoriesService {
                 title: data.title,
                 slug: data.slug,
                 imageUrl: imageUrl ?? null,
-                parentId: parentId ?? null
+                parentId: parentId ?? null,
+                isHidden: Boolean(data.isHidden)
             },
             include: {
                 parent: { select: { id: true, title: true, slug: true } },
@@ -241,7 +256,7 @@ export class CategoriesService {
     async updateCategory(
         tenantId: string,
         categoryId: string,
-        data: { title?: string; slug?: string; imageUrl?: unknown; parentId?: unknown }
+        data: { title?: string; slug?: string; imageUrl?: unknown; parentId?: unknown; isHidden?: unknown }
     ) {
         const category = await prisma.category.findFirst({
             where: { id: categoryId, tenantId }
@@ -268,7 +283,8 @@ export class CategoriesService {
                 title: data.title ?? category.title,
                 slug: data.slug ?? category.slug,
                 imageUrl: imageUrl,
-                parentId
+                parentId,
+                isHidden: data.isHidden === undefined ? category.isHidden : Boolean(data.isHidden)
             }
         })
 

@@ -186,4 +186,24 @@ export class CategoriesController {
             res.status(500).json({ statusCode: 500, message: 'Internal Server Error' })
         }
     }
+
+    async getPublicCategoryBySlug(req: Request, res: Response) {
+        const tenant = req.tenant
+
+        if (!tenant) {
+            return res.status(404).json({ statusCode: 404, statusMessage: 'Tenant not found' })
+        }
+
+        try {
+            const slug = String(req.params.slug || '')
+            const category = await categoriesService.getPublicCategoryBySlug(tenant.id, slug)
+            if (!category) {
+                return res.status(404).json({ statusCode: 404, statusMessage: 'Category not found' })
+            }
+            res.json(category)
+        } catch (error) {
+            console.error('Public category detail error:', error)
+            res.status(500).json({ statusCode: 500, message: 'Internal Server Error' })
+        }
+    }
 }

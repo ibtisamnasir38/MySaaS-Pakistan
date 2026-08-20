@@ -132,6 +132,24 @@
         />
 
         <div
+          class="flex items-center justify-between p-4 rounded-md"
+          style="border: 1px solid var(--surface-border); background: var(--surface-1)"
+        >
+          <div>
+            <p class="text-sm font-medium" style="color: var(--text-primary)">
+              {{ t('admin.forms.category.isHidden.label') }}
+            </p>
+            <p class="text-xs" style="color: var(--text-secondary)">
+              {{ t('admin.forms.category.isHidden.hint') }}
+            </p>
+          </div>
+          <BaseToggle
+            v-model="form.isHidden"
+            :sr-label="t('admin.forms.category.isHidden.label')"
+          />
+        </div>
+
+        <div
           v-if="errorMessage"
           class="p-4 bg-red-50 border border-red-200 rounded-md"
         >
@@ -186,6 +204,7 @@ import { usePlatformBaseDomain } from '~/composables/platformBaseDomain'
 import SingleImageUploader from '~/components/admin/SingleImageUploader.vue'
 import BaseInput from '~/components/ui/BaseInput.vue'
 import BaseSelect from '~/components/ui/BaseSelect.vue'
+import BaseToggle from '~/components/ui/BaseToggle.vue'
 import { CONTENT_SLUG_PATTERN, CONTENT_SLUG_RULE_HINT, normalizeContentSlug } from '~/shared/content-slug'
 
 definePageMeta({
@@ -203,7 +222,8 @@ const form = ref({
   title: '',
   slug: '',
   parentId: '',
-  imageUrl: null as string | null
+  imageUrl: null as string | null,
+  isHidden: false
 })
 
 type Category = {
@@ -398,6 +418,7 @@ async function fetchCategory() {
     form.value.slug = data.slug
     form.value.parentId = data.parentId || ''
     form.value.imageUrl = data.imageUrl ?? null
+    form.value.isHidden = Boolean(data.isHidden)
     lastAutoSlug.value = slugify(data.slug || data.title)
   } catch (error: any) {
     console.error('Failed to load category:', error)
@@ -425,7 +446,8 @@ async function handleSubmit() {
         title: form.value.title,
         slug: form.value.slug,
         parentId: form.value.parentId || null,
-        imageUrl: form.value.imageUrl
+        imageUrl: form.value.imageUrl,
+        isHidden: form.value.isHidden
       }
     })
   } catch (error: any) {

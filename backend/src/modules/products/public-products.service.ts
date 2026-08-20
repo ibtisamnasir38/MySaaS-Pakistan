@@ -57,7 +57,7 @@ export class PublicProductsService {
         })
     }
 
-    async listProducts(tenantId: string, search?: string) {
+    async listProducts(tenantId: string, search?: string, categoryId?: string) {
         const now = new Date()
         const settings = await prisma.storeSettings.findUnique({
             where: { tenantId },
@@ -73,6 +73,21 @@ export class PublicProductsService {
         // Note: search filtering is done in-memory (below) using normalizeSearchText
         // so that Arabic Alef variants and Latin diacritics are handled correctly.
         // Prisma's `contains: mode: insensitive` cannot normalize Arabic characters.
+
+        if (categoryId) {
+            // Category-scoped fetch (e.g. the category detail page): show every product
+            // in that category regardless of the category's own hidden flag, since
+            // visiting the category directly is how hidden categories stay reachable.
+            where.OR = [{ categoryId }, { categoryLinks: { some: { categoryId } } }]
+        } else {
+            // General listing (shop page, filters): hide products whose every category
+            // is hidden, but keep products with no category or with at least one visible one.
+            where.OR = [
+                { categoryId: null, categoryLinks: { none: {} } },
+                { category: { isHidden: false } },
+                { categoryLinks: { some: { category: { isHidden: false } } } }
+            ]
+        }
 
         const products = await prisma.product.findMany({
             where,

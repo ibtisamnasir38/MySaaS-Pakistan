@@ -2400,6 +2400,10 @@
         "image": {
           "label": "Category image (optional)",
           "hint": "Shown on storefront category tiles"
+        },
+        "isHidden": {
+          "label": "Hidden from storefront",
+          "hint": "Not shown in navigation, the shop page, or filters — only reachable by visiting its direct link."
         }
       },
       "customer": {
@@ -3511,7 +3515,8 @@
             "products": "Products",
             "links": "Links",
             "actions": "Actions",
-            "productsCount": "{count} products"
+            "productsCount": "{count} products",
+            "hidden": "Hidden"
           },
           "links": {
             "openCategory": "Open category page",

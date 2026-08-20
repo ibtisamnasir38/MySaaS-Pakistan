@@ -465,6 +465,7 @@ model Category {
   title    String
   slug     String
   imageUrl String?
+  isHidden Boolean @default(false)
   tenantId String
   tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 

@@ -2384,6 +2384,10 @@
         "image": {
           "label": "Image de la catégorie (optionnel)",
           "hint": "Affichée sur les tuiles de catégories dans la boutique"
+        },
+        "isHidden": {
+          "label": "Masquée sur la boutique",
+          "hint": "Non affichée dans la navigation, la page boutique ou les filtres — accessible uniquement via son lien direct."
         }
       },
       "customer": {
@@ -3492,7 +3496,8 @@
             "products": "Produits",
             "links": "Liens",
             "actions": "Actions",
-            "productsCount": "{count} produits"
+            "productsCount": "{count} produits",
+            "hidden": "Masquée"
           },
           "links": {
             "openCategory": "Ouvrir la page catégorie",
