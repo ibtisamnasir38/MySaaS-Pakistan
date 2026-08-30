@@ -1242,6 +1242,11 @@ enum ShipmentProvider {
   ECOTRACK
   ZR_EXPRESS
   SELF
+  LEOPARDS
+  TCS
+  MNP
+  TRAX
+  POSTEX
 }
 
 enum ShipmentStatus {
