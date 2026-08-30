@@ -3,6 +3,7 @@ import prisma from '../../lib/prisma'
 import { MaystroProvider } from './providers/maystro.provider'
 import { YalidineProvider, isSystemicYalidineFailure } from './providers/yalidine.provider'
 import { SelfDeliveryProvider } from './providers/self.provider'
+import { PakistanProvider } from './providers/pakistan.provider'
 import { DELIVERY_PROVIDER_CATALOG, getProviderCatalogItem } from './catalog'
 import { MaystroOrderService } from './maystro/maystro-order.service'
 import { MaystroWebhookService } from './maystro/maystro-webhook.service'
@@ -97,8 +98,13 @@ export class DeliveryService {
     constructor(client: PrismaClient = prisma) {
         this.prisma = client
         this.staticProviders = {
-            SELF: new SelfDeliveryProvider()
-        }
+            SELF: new SelfDeliveryProvider(),
+            LEOPARDS: new PakistanProvider('LEOPARDS'),
+            TCS: new PakistanProvider('TCS'),
+            MNP: new PakistanProvider('MNP'),
+            TRAX: new PakistanProvider('TRAX'),
+            POSTEX: new PakistanProvider('POSTEX')
+        } as any
     }
 
     private supportedProviders(): ShipmentProvider[] {
@@ -148,6 +154,7 @@ export class DeliveryService {
             }
         }
 
+        // Pakistan providers - no credentials needed for MVP
         return {}
     }
 
@@ -165,6 +172,11 @@ export class DeliveryService {
             return cfg
         }
 
+        // Pakistan providers work without account config
+        if (['LEOPARDS', 'TCS', 'MNP', 'TRAX', 'POSTEX'].includes(provider)) {
+            return {}
+        }
+
         return null
     }
 
@@ -173,7 +185,7 @@ export class DeliveryService {
         provider: ShipmentProvider
     ): Promise<{ impl: DeliveryProvider; apiConfig: ProviderApiConfig | null }> {
         const staticProvider = this.staticProviders[provider]
-        if (staticProvider) return { impl: staticProvider, apiConfig: null }
+        if (staticProvider) return { impl: staticProvider, apiConfig: {} }
 
         if (provider === 'MAYSTRO') {
             const cfg = await this.getProviderApiConfig(tenantId, provider)
