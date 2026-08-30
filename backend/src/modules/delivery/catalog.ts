@@ -46,8 +46,38 @@ export const DELIVERY_PROVIDER_CATALOG: DeliveryProviderCatalogItem[] = [
         provider: 'SELF',
         name: 'Self delivery',
         supports: { quote: false, createShipment: true, track: false, webhooks: false },
-        credentialFields: []
-    }
+            credentialFields: []
+  },
+  {
+    provider: 'LEOPARDS' as any,
+    name: 'Leopards Courier (Pakistan)',
+    supports: { quote: true, createShipment: true, track: true, webhooks: false },
+    credentialFields: []
+  },
+  {
+    provider: 'TCS' as any,
+    name: 'TCS Courier (Pakistan)',
+    supports: { quote: true, createShipment: true, track: true, webhooks: false },
+    credentialFields: []
+  },
+  {
+    provider: 'MNP' as any,
+    name: 'M&P (Pakistan)',
+    supports: { quote: true, createShipment: true, track: true, webhooks: false },
+    credentialFields: []
+  },
+  {
+    provider: 'TRAX' as any,
+    name: 'Trax Courier (Pakistan)',
+    supports: { quote: true, createShipment: true, track: true, webhooks: false },
+    credentialFields: []
+  },
+  {
+    provider: 'POSTEX' as any,
+    name: 'PostEx (Pakistan)',
+    supports: { quote: true, createShipment: true, track: true, webhooks: false },
+    credentialFields: []
+  }
 ]
 
 export const getProviderCatalogItem = (provider: ShipmentProvider): DeliveryProviderCatalogItem => {
